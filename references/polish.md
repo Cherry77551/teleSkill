@@ -13,6 +13,7 @@
 3. **改措辞** —— 去口语（"挺多"→给数）、去模糊、去夸大（"非常显著"→补统计表述）；时态语态按学科惯例。
 4. **给对照** —— 逐句「原句 → 改后 → 为何改」，让用户逐条取舍。
 5. **守术语** —— 专业术语与 [`../CONTEXT.md`](../CONTEXT.md) 一致，全文统一。检查单见 [`../assets/checklists/polish-checklist.md`](../assets/checklists/polish-checklist.md)。
+6. **读者测试** —— 找一个**没有上下文的"新读者"**（另一个空会话，或换个人）只读改后稿，问 5–10 个读者真会问的问题（结论是什么、方法是否说得通、哪句含糊）。答不上或产生误解的地方，回到第 2–3 步再改；反复到"新读者"不再卡壳。
 
 ## 红线
 
@@ -22,4 +23,4 @@
 
 ## 产出与去向
 
-交付润色后全文 + 逐句对照表。若发现引用格式问题，转交 [`reference-format.md`](reference-format.md)；若发现论证缺口，转交 [`literature-review.md`](literature-review.md)。
+交付**修订稿（tracked changes）或批注版** + 逐句对照表，让作者能逐条接受或拒绝；Word 的读写与修订操作见 [`docx.md`](docx.md)。若发现引用格式问题，转交 [`reference-format.md`](reference-format.md)；若发现论证缺口，转交 [`literature-review.md`](literature-review.md)。

@@ -1,7 +1,7 @@
 {
   "name": "academic-writer",
   "displayName": "学术全能",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "domain": "通用理科/工科",
   "description": "面向科研写作的 TeleAgent Skill，涵盖文献梳理、数据图表生成、参考文献排版、语言润色四大模块，覆盖从灵感激发到规范成稿的闭环。",
   "entry": "SKILL.md",
@@ -12,6 +12,10 @@
     { "name": "reference-format", "path": "references/reference-format.md", "summary": "把参考文献统一排版成目标格式" },
     { "name": "polish", "path": "references/polish.md", "summary": "在不改变科学事实的前提下润色学术语言" }
   ],
+  "shared": [
+    { "name": "docx", "path": "references/docx.md", "summary": "Word 读写、批注、修订与渲染校验" }
+  ],
   "scripts": ["scripts/format_refs.py"],
-  "assets": ["assets/templates", "assets/checklists"]
+  "assets": ["assets/templates", "assets/checklists"],
+  "evals": ["evals/eval-cases.md"]
 }

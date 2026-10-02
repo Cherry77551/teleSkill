@@ -10,15 +10,18 @@
 academic-writer/
 ├── SKILL.md          # 必需：元数据 + 路由 + 通用纪律
 ├── CONTEXT.md        # 术语表
-├── references/       # 四个模块，按需加载
+├── references/       # 按需加载
 │   ├── literature-review.md    文献梳理
 │   ├── data-viz.md             数据分析与可视化
 │   ├── reference-format.md     参考文献排版
-│   └── polish.md               语言润色
+│   ├── polish.md               语言润色
+│   └── docx.md                 支持文档：Word 读写 / 批注 / 修订 / 校验
 ├── scripts/          # 可执行脚本
 │   ├── format_refs.py          GB/T 7714 批量排版
 │   └── refs.example.csv
-└── assets/{templates,checklists}
+├── assets/{templates,checklists}
+└── evals/            # 评估用例
+    └── eval-cases.md
 ```
 
 ## 怎么用
@@ -27,9 +30,12 @@ academic-writer/
 2. 直接说需求，例如："帮我把这 20 篇 PDF 梳理成一篇综述框架。"
 3. 技能自己判断该走哪个模块（文献 / 图表 / 引用 / 润色）；不确定时先问目标和研究问题。
 
-## 共享纪律
+## 设计要点
 
-四个模块共用同一条底线：**不编造**、**可溯源**、**先对齐再动手**。模块之间用**转交**打通成闭环：`literature-review → reference-format → polish`。
+- **共享纪律**：四个模块共用底线——**不编造**、**可溯源**、**先对齐再动手**。模块之间用**转交**打通成闭环：`literature-review → reference-format → polish`。
+- **成稿校验**：交付 Word 一律**渲染校验**（见 `references/docx.md`）；润色与审阅用**修订 / 批注**交付，方便作者逐条取舍。
+- **读者测试**：定稿前用没有上下文的"新读者"过一遍，专治"作者看得懂、别人看不懂"。
+- **可评测**：`evals/eval-cases.md` 给出五条用例与红线，用于验证技能行为稳定。
 
 ## 交付
 

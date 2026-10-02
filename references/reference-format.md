@@ -12,7 +12,8 @@
 2. **解析** —— 把每条引用拆成字段：作者、题名、载体、年、卷、期、页、DOI。
 3. **补全** —— 缺字段标 `[缺]` 交用户补；能查证的提议补全，**经用户确认后才写入**。
 4. **去重** —— 同一文献的不同写法合并，保留信息最全的一条。
-5. **输出** —— 生成文后参考文献表，按格式排序；正文引文与表一一对应。检查单见 [`../assets/checklists/reference-checklist.md`](../assets/checklists/reference-checklist.md)。
+5. **输出** —— 生成文后参考文献表，按格式排序；正文引文与表一一对应。
+6. **校验** —— 产出 `.docx` 后按 [`docx.md`](docx.md) 渲染成图，核对悬挂缩进、排序与分页；确认正文引用数 = 文后条目数（[`../assets/checklists/reference-checklist.md`](../assets/checklists/reference-checklist.md)）。
 
 批量排版可用 [`../scripts/format_refs.py`](../scripts/format_refs.py)：读结构化 CSV，按 GB/T 7714 输出，只做确定性排版，不补全、不编造。
 
@@ -29,4 +30,4 @@
 
 ## 产出与去向
 
-交付格式化参考文献表 + 正文引文标注。若同时要改正文语言，交给 [`polish.md`](polish.md)。
+交付格式化参考文献表（`.docx` 优先，生成与校验见 [`docx.md`](docx.md)）+ 正文引文标注。若同时要改正文语言，交给 [`polish.md`](polish.md)。
