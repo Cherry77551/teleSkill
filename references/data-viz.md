@@ -15,7 +15,7 @@
 1. **看数** —— 读入数据，确认变量、量纲、样本量、缺失值；先把数据描述出来，再谈图。
 2. **选型** —— 按要传达的关系选图，给首选 + 备选并说理由：
    - 比较 → 条形图；分布 → 箱线 / 小提琴；趋势 → 折线；相关 → 散点；占比 → 堆叠条
-3. **出脚本** —— 给可复现代码（Python `matplotlib`/`seaborn` 或 R `ggplot2`），数据、代码、图三者一致，图能一键重生。
+3. **出脚本** —— 给可复现代码（Python `matplotlib`/`seaborn` 或 R `ggplot2`），数据、代码、图三者一致，图能一键重生。单变量/趋势等常规图可直接用 [`../scripts/plot.py`](../scripts/plot.py) 参数化出图（`--kind bar/line/scatter/box/hist`）。
 4. **达标** —— 按 [`../assets/checklists/figure-checklist.md`](../assets/checklists/figure-checklist.md) 逐条检查。
 5. **交付** —— 图（矢量优先，PDF / SVG）+ 生成脚本 + 一段图注；规格卡见 [`../assets/templates/figure-spec.md`](../assets/templates/figure-spec.md)。
 
@@ -27,4 +27,4 @@
 
 ## 产出与去向
 
-交付图、脚本、图注；整篇排版见 [`manuscript-format.md`](manuscript-format.md)。出现在正文的统计量措辞，交给 [`polish.md`](polish.md)。
+交付图、脚本、图注；图表默认**内嵌进用户选定的唯一交付格式**（如 Word 的 `.docx`）。若用户要求图表以独立文件（PDF/SVG/PNG）交付，须在需求确认阶段把"图表独立交付"列入附带要素并确认格式，定稿后不得擅自附带图文件。整篇排版见 [`manuscript-format.md`](manuscript-format.md)。出现在正文的统计量措辞，交给 [`polish.md`](polish.md)。

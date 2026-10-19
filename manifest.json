@@ -1,7 +1,7 @@
 {
   "name": "academic-writer",
   "displayName": "学术全能",
-  "version": "1.3.0",
+  "version": "1.15.0",
   "domain": "通用理科/工科",
   "description": "面向科研写作的 TeleAgent Skill，涵盖文献梳理、数据图表生成、参考文献排版、语言润色四大模块，覆盖从灵感激发到规范成稿的闭环。",
   "entry": "SKILL.md",
@@ -10,13 +10,17 @@
     { "name": "literature-review", "path": "references/literature-review.md", "summary": "围绕研究问题生成可溯源的文献综述" },
     { "name": "data-viz", "path": "references/data-viz.md", "summary": "把数据做成符合期刊规范的图或表" },
     { "name": "reference-format", "path": "references/reference-format.md", "summary": "把参考文献统一排版成目标格式" },
-    { "name": "polish", "path": "references/polish.md", "summary": "在不改变科学事实的前提下润色学术语言" }
+    { "name": "polish", "path": "references/polish.md", "summary": "在不改变科学事实的前提下润色学术语言" },
+    { "name": "human-writing", "path": "references/human-writing.md", "summary": "降重降AI率语言规范：句段长短错落、去高频词、破总分总结构" },
+    { "name": "template-reuse", "path": "references/template-reuse.md", "summary": "按学校/期刊模板为骨架生成，模板样式优先于默认基线" },
+    { "name": "revision", "path": "references/revision.md", "summary": "按导师/审稿意见迭代改稿，修订模式闭环交付" },
+    { "name": "english-writing", "path": "references/english-writing.md", "summary": "英文论文：语言判定、英文基线、降 AI 率英文规则、Cover Letter / 审稿回复" }
   ],
   "shared": [
     { "name": "manuscript-format", "path": "references/manuscript-format.md", "summary": "整篇排版规范、输出格式与附带要素" },
     { "name": "docx", "path": "references/docx.md", "summary": "Word 读写、批注、修订与渲染校验" }
   ],
-  "scripts": ["scripts/format_refs.py"],
-  "assets": ["assets/templates", "assets/checklists"],
+  "scripts": ["scripts/check_format.py", "scripts/check_style.py", "scripts/eval_check.py", "scripts/format_refs.py", "scripts/plot.py", "scripts/omml.py", "scripts/render_check.ps1"],
+  "assets": ["assets/templates", "assets/checklists", "assets/examples"],
   "evals": ["evals/eval-cases.md"]
 }
