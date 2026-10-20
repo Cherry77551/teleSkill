@@ -27,6 +27,12 @@ import sys
 import tempfile
 import zipfile
 
+try:
+    from _paths import PathError, resolve_input
+except ImportError:  # 作为包导入时补 scripts/ 到 sys.path
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from _paths import PathError, resolve_input
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # scripts/ 上一级
 ENV = dict(os.environ, PYTHONIOENCODING="utf-8")
 
@@ -122,6 +128,15 @@ def _fx_p(text, jc=None):
     return '<w:p>%s<w:r><w:t xml:space="preserve">%s</w:t></w:r></w:p>' % (ppr, text)
 
 
+def _fx_toc(text):
+    """真实 TOC 域（含 instrText），供目录校验夹具使用。"""
+    return ('<w:p><w:r><w:fldChar w:fldCharType="begin"/></w:r>'
+            '<w:r><w:instrText xml:space="preserve"> TOC \\o "1-3" \\h \\z \\u </w:instrText></w:r>'
+            '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
+            '<w:r><w:t xml:space="preserve">%s</w:t></w:r>'
+            '<w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>') % text
+
+
 def _fx_docx(path, paras):
     doc = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
            '<w:document %s><w:body>%s'
@@ -143,7 +158,7 @@ def check_format_lang(results):
             _fx_p("1 Introduction", "center"),
             _fx_p("1.1 Background", "left"),
             _fx_p('The "smart grid" integrates renewables into modern power systems.'),
-            _fx_p("Contents"),
+            _fx_toc("Contents"),
             _fx_p("As shown in Figure 1, the framework has three modules."),
             _fx_p("Figure 1 Overview of the proposed framework."),
             _fx_p("References"),
@@ -154,7 +169,7 @@ def check_format_lang(results):
             _fx_p("一、引言", "center"),
             _fx_p("1.1 研究背景", "left"),
             _fx_p("本文研究智能电网的调度问题。"),
-            _fx_p("目录"),
+            _fx_toc("目录"),
             _fx_p("参考文献"),
             _fx_p("[1] 张三, 李四. 一种调度方法[J]. 电力学报, 2023, 12(3): 45-58."),
         ])
@@ -173,6 +188,21 @@ def check_format_lang(results):
 
         code, out = run([sys.executable, cf, zh_doc, "--lang", "zh"])
         results.append(("check_format --lang zh 中文口径回归", code == 0, "exit=%d" % code, "E23"))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def check_build_docx(results):
+    """build_docx.py 冒烟：示例 spec 生成 docx 并跑 check_format --strict（E25）。"""
+    bd = os.path.join(ROOT, "scripts", "build_docx.py")
+    spec = os.path.join(ROOT, "assets", "templates", "paper-spec.example.json")
+    tmp = tempfile.mkdtemp(prefix="aw_build_")
+    try:
+        out = os.path.join(tmp, "sample.docx")
+        code, out_text = run([sys.executable, bd, spec, "-o", out, "--check", "--strict"])
+        tail = (out_text.strip().splitlines() or ["-"])[-1]
+        ok = code == 0 and os.path.isfile(out)
+        results.append(("build_docx.py 生成 + 严格校验", ok, tail, "E25"))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -196,9 +226,20 @@ def main():
     check_scripts_compile(results)
     check_format_refs(results)
     check_format_lang(results)
+    check_build_docx(results)
     if args.docx:
+        try:
+            args.docx = resolve_input(args.docx)
+        except PathError as e:
+            print("[ERROR] 路径校验失败: %s" % e)
+            sys.exit(2)
         check_docx(results, args.docx)
     if args.text:
+        try:
+            args.text = resolve_input(args.text)
+        except PathError as e:
+            print("[ERROR] 路径校验失败: %s" % e)
+            sys.exit(2)
         check_text(results, args.text)
 
     fails = [r for r in results if not r[1]]

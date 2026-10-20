@@ -42,8 +42,20 @@ import sys
 import zipfile
 from xml.etree import ElementTree as ET
 
+try:
+    from _paths import PathError, resolve_input
+except ImportError:  # 作为包导入时补 scripts/ 到 sys.path
+    import os as _os
+    sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+    from _paths import PathError, resolve_input
+
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 M = "http://schemas.openxmlformats.org/officeDocument/2006/math"
+
+# GB/T 7714 载体标识：J/M/D/C/N/R/S/P/G/Z/A 及联机 /OL 变体
+CARRIER_RE = re.compile(
+    r"\[(?:[JMDCNRSPGZA]|(?:J|M|C|N|R|S|P|G|Z|EB|DB|CP|A)/OL)\]"
+)
 
 
 def qw(tag):
@@ -246,6 +258,24 @@ def _h1_num_re():
     return re.compile(r"^(?:\d+\.?|[IVXLC]+\.)\s+\S")
 
 
+_TITLE_EXCLUDE = {"摘要", "abstract", "关键词", "keywords", "目录", "contents"}
+
+
+def _looks_like_bare_title(text, tlen):
+    """无 Title 样式时，把首个短、无编号、无句读的段落视为论文题目。"""
+    if not text or len(text) > tlen:
+        return False
+    if text.strip().lower() in _TITLE_EXCLUDE:
+        return False
+    if re.match(r"^[一二三四五六七八九十]+、", text):
+        return False
+    if re.match(r"^\d+(?:\.\d+)*[\.\s]", text):
+        return False
+    if re.search(r"[。，、；：！？,;:]", text):
+        return False
+    return True
+
+
 def check_headings_align(root, tpl=None, lang="zh"):
     """题目与一级标题对齐基准默认居中、二三级默认左对齐；--template 按模板实际值，--lang en 一级按数字编号识别。"""
     pattern = (tpl or {}).get("heading_pattern")
@@ -254,33 +284,55 @@ def check_headings_align(root, tpl=None, lang="zh"):
     h1_expect = (tpl or {}).get("h1_jc") or "center"
     h2_expect = (tpl or {}).get("h2_jc")  # None → 二三级不得居中
     rx_num = _h1_num_re()
+    rx_title_style = re.compile(r"^title\d*$", re.I)
     tlen = 60 if lang == "en" else 40
-    bad_center, bad_left = [], []
+    bad_title, bad_center, bad_left = [], [], []
+    first_seen = False
     for p in root.iter(qw("p")):
         t = text_of(p).strip()
-        if not t or len(t) > tlen:
+        if not t:
             continue
         style = pstyle_val(p) or ""
         align = pjc(p)
+
+        is_title = bool(rx_title_style.match(style))
+        if not first_seen:
+            first_seen = True
+            if not is_title and _looks_like_bare_title(t, tlen):
+                is_title = True
+        if is_title:
+            if align != "center":
+                bad_title.append(t[:20])
+            continue
+
+        if len(t) > tlen:
+            continue
         is_h1 = ("Heading1" in style) or bool(re.match(r"^[一二三四五六七八九十]+、", t))
         if pattern == "chapter" and re.match(r"^第[一二三四五六七八九十百\d]+章", t):
             is_h1 = True
         if pattern == "num" and rx_num.match(t):
             is_h1 = True
-        is_sub = ("Heading2" in style or "Heading3" in style) or bool(re.match(r"^\d+(\.\d+)+", t))
+        # 二级/三级：Heading2/3，或“1.1 …”式编号；排除带句读的正文（如“3.14 是圆周率。”）
+        is_sub = ("Heading2" in style or "Heading3" in style) or (
+            bool(re.match(r"^\d+(?:\.\d+)+\s+\S", t)) and not re.search(r"[。，、；：！？,;]", t)
+        )
         if is_h1 and align != h1_expect:
             bad_center.append(t[:20])
         if is_sub and ((h2_expect is None and align == "center") or
                        (h2_expect is not None and align != h2_expect)):
             bad_left.append(t[:20])
-    if bad_center or bad_left:
-        msg = "标题对齐错误（基准：一级 %s / 二三级 %s）" % (_jc_name(h1_expect), _jc_name(h2_expect) if h2_expect else "左对齐")
+    if bad_title or bad_center or bad_left:
+        msg = "标题对齐错误（基准：题目居中 / 一级 %s / 二三级 %s）" % (
+            _jc_name(h1_expect), _jc_name(h2_expect) if h2_expect else "左对齐")
+        if bad_title:
+            msg += "；题目应居中未居中: %s" % bad_title[:5]
         if bad_center:
             msg += "；应 %s 未 %s: %s" % (_jc_name(h1_expect), _jc_name(h1_expect), bad_center[:5])
         if bad_left:
             msg += "；二三级对齐与基准不符: %s" % bad_left[:5]
         return (msg, False, "")
-    return ("标题对齐正确（题目/一级 %s，二三级 %s）" % (_jc_name(h1_expect), _jc_name(h2_expect) if h2_expect else "左对齐"), True, "")
+    return ("标题对齐正确（题目居中，一级 %s，二三级 %s）" % (
+        _jc_name(h1_expect), _jc_name(h2_expect) if h2_expect else "左对齐"), True, "")
 
 
 def check_black_color(root, tpl=None):
@@ -350,9 +402,13 @@ def check_toc(full_text, root, strict=False, lang="zh"):
     else:
         has_text = "目录" in full_text
     has_field = any("TOC" in (t.text or "") for t in root.iter(qw("instrText")))
+    if not has_field:
+        has_field = any("TOC" in (f.get(qw("instr")) or "") for f in root.iter(qw("fldSimple")))
     detail = "文本=%s 域=%s" % (has_text, has_field)
-    if has_text or has_field:
-        return ("含目录", True, detail)
+    if has_field:
+        return ("含目录（TOC 域，可更新页码）", True, detail)
+    if has_text:
+        return ("目录为静态文本，须改为 TOC 域（自动生成、可更新页码）", False, detail)
     if strict:
         return ("文档无目录（strict 模式要求存在）", False, detail)
     return ("未检测到目录", True, detail)
@@ -411,13 +467,14 @@ def check_references(paras, lang="zh"):
     if lang == "en":
         return ("参考文献条目存在（英文口径不校验 [J]/[M] 载体标识，组成由 format_refs.py 保证）", True, "共 %d 条" % len(entries))
     bad = []
-    for t in entries[:40]:
-        if not re.match(r"^\[\d+\]\s", t):
+    for t in entries:
+        if not re.match(r"^\[\d+\]\s+", t):
             bad.append("条目未以 [N] 开头: %s" % t[:20])
-        elif not re.search(r"\[[JMCD]\]", t):
-            bad.append("条目缺载体标识 [J/M/D/C]: %s" % t[:20])
+        elif not CARRIER_RE.search(t):
+            bad.append("条目缺载体标识（[J/M/D/C/N/R/S/P/G/Z/A] 或 /OL）: %s" % t[:20])
     ok = len(bad) == 0
-    return ("参考文献条目结构正确" if ok else "参考文献条目结构错误", ok, "共 %d 条; %s" % (len(entries), bad[:5]))
+    return ("参考文献条目结构正确" if ok else "参考文献条目结构错误", ok,
+            "共 %d 条；问题 %d 处: %s" % (len(entries), len(bad), bad[:5]))
 
 
 def check_title_len(paras, lang="zh"):
@@ -452,7 +509,11 @@ def main():
     args = ap.parse_args()
 
     try:
-        root, full_text, paras = parse_document(args.docx)
+        docx_path = resolve_input(args.docx)
+        root, full_text, paras = parse_document(docx_path)
+    except PathError as e:
+        print("[ERROR] 路径校验失败: %s" % e)
+        sys.exit(2)
     except Exception as e:
         print("[ERROR] 无法解析文档: %s" % e)
         sys.exit(2)
@@ -465,7 +526,10 @@ def main():
     tpl = None
     if args.template:
         try:
-            tpl = parse_template(args.template)
+            tpl = parse_template(resolve_input(args.template))
+        except PathError as e:
+            print("[ERROR] 路径校验失败: %s" % e)
+            sys.exit(2)
         except Exception as e:
             print("[ERROR] 无法解析模板: %s" % e)
             sys.exit(2)

@@ -34,6 +34,13 @@ import csv
 import re
 import sys
 
+try:
+    from _paths import PathError, resolve_input
+except ImportError:  # 作为包导入时补 scripts/ 到 sys.path
+    import os as _os
+    sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+    from _paths import PathError, resolve_input
+
 MARK = {"J": "[J]", "M": "[M]", "D": "[D]", "C": "[C]"}
 BIB_TYPE = {"article": "J", "book": "M", "inproceedings": "C", "conference": "C",
             "phdthesis": "D", "mastersthesis": "D"}
@@ -403,10 +410,16 @@ def main():
     ap.add_argument("--sort", choices=["year"], default=None, help="排序方式，默认按输入顺序")
     args = ap.parse_args()
 
-    if args.input.lower().endswith(".bib"):
-        rows = parse_bib(args.input)
+    try:
+        src = resolve_input(args.input)
+    except PathError as e:
+        print("错误: 路径校验失败：%s" % e, file=sys.stderr)
+        sys.exit(2)
+
+    if src.lower().endswith(".bib"):
+        rows = parse_bib(src)
     else:
-        with open(args.input, newline="", encoding="utf-8-sig") as f:
+        with open(src, newline="", encoding="utf-8-sig") as f:
             rows = list(csv.DictReader(f))
 
     if args.dedupe:

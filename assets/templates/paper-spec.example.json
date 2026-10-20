@@ -1,0 +1,63 @@
+{
+  "lang": "zh",
+  "title": "面向智能电网的调度优化方法研究",
+  "author": "张三",
+  "date": "2024 年 6 月",
+  "toc": true,
+  "abstract": {
+    "zh": "本文研究智能电网的调度优化问题，提出一种可复现的建模与求解流程。实验表明该方法在典型场景下有效。",
+    "en": "This paper studies scheduling optimization for smart grids and presents a reproducible modeling and solution pipeline. Experiments show that the method is effective in typical scenarios."
+  },
+  "keywords": "智能电网；调度优化；可复现",
+  "sections": [
+    {
+      "heading": "绪论",
+      "level": 1,
+      "paragraphs": [
+        "智能电网的调度问题受到广泛关注[1]，其核心是在多重约束下优化资源分配。",
+        "设第 $i$ 个机组的出力为 $x_i^2$，则目标函数可写为式(1)。"
+      ],
+      "equations": [
+        { "latex": "\\min \\sum_{i=1}^{n} c_i x_i^2", "number": 1 }
+      ]
+    },
+    {
+      "heading": "研究背景",
+      "level": 2,
+      "paragraphs": [
+        "已有研究多聚焦单一目标，本文同时考虑经济性与稳定性。"
+      ]
+    },
+    {
+      "heading": "方法",
+      "level": 1,
+      "paragraphs": [
+        "本文采用可复现的建模流程，主要参数见表 1。"
+      ],
+      "tables": [
+        {
+          "caption": "表 1 主要参数",
+          "type": "three-line",
+          "header": ["参数", "含义", "取值"],
+          "rows": [
+            ["$c_i$", "成本系数", "1.0"],
+            ["$n$", "机组数", "10"]
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "结论",
+      "level": 1,
+      "paragraphs": [
+        "所提方法在典型场景下有效，后续将扩展到多目标情形。"
+      ]
+    }
+  ],
+  "references": [
+    "[1] 张三, 李四. 智能电网调度方法[J]. 电力系统自动化, 2023, 47(2): 1-9.",
+    "[2] 国家能源局. 智能电网发展报告[R]. 北京: 国家能源局, 2022.",
+    "[3] 电力系统调度规范: GB/T 00000-2021[S]. 北京: 中国标准出版社, 2021.",
+    "[4] 调度数据说明[EB/OL]. https://example.org/data, 2024-01-01."
+  ]
+}

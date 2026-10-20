@@ -22,6 +22,13 @@ import sys
 import zipfile
 from xml.etree import ElementTree as ET
 
+try:
+    from _paths import PathError, resolve_input
+except ImportError:  # 作为包导入时补 scripts/ 到 sys.path
+    import os as _os
+    sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+    from _paths import PathError, resolve_input
+
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
 
@@ -71,7 +78,10 @@ def main():
     args = ap.parse_args()
 
     try:
-        paras = extract_paragraphs(args.input)
+        paras = extract_paragraphs(resolve_input(args.input))
+    except PathError as e:
+        print("错误: 路径校验失败：%s" % e)
+        sys.exit(2)
     except Exception as e:
         print("错误: 无法读取文件 %s：%s" % (args.input, e))
         sys.exit(2)

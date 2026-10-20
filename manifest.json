@@ -1,7 +1,7 @@
 {
   "name": "academic-writer",
   "displayName": "学术全能",
-  "version": "1.15.0",
+  "version": "1.17.0",
   "domain": "通用理科/工科",
   "description": "面向科研写作的 TeleAgent Skill，涵盖文献梳理、数据图表生成、参考文献排版、语言润色四大模块，覆盖从灵感激发到规范成稿的闭环。",
   "entry": "SKILL.md",
@@ -18,9 +18,10 @@
   ],
   "shared": [
     { "name": "manuscript-format", "path": "references/manuscript-format.md", "summary": "整篇排版规范、输出格式与附带要素" },
-    { "name": "docx", "path": "references/docx.md", "summary": "Word 读写、批注、修订与渲染校验" }
+    { "name": "docx", "path": "references/docx.md", "summary": "Word 读写、确定性生成、批注、修订与渲染校验" },
+    { "name": "requirement-confirmation", "path": "references/requirement-confirmation.md", "summary": "七项需求确认的完整选项与三步收尾措辞" }
   ],
-  "scripts": ["scripts/check_format.py", "scripts/check_style.py", "scripts/eval_check.py", "scripts/format_refs.py", "scripts/plot.py", "scripts/omml.py", "scripts/render_check.ps1"],
+  "scripts": ["scripts/build_docx.py", "scripts/check_format.py", "scripts/check_style.py", "scripts/eval_check.py", "scripts/format_refs.py", "scripts/plot.py", "scripts/omml.py", "scripts/render_check.ps1", "scripts/_paths.py"],
   "assets": ["assets/templates", "assets/checklists", "assets/examples"],
   "evals": ["evals/eval-cases.md"]
 }

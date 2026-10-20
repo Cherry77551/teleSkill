@@ -16,10 +16,18 @@
 """
 import argparse
 import csv
+import os
+import sys
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+try:
+    from _paths import PathError, resolve_input, resolve_output
+except ImportError:  # 作为包导入时补 scripts/ 到 sys.path
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from _paths import PathError, resolve_input, resolve_output
 
 plt.rcParams["font.sans-serif"] = [
     "Noto Sans CJK SC", "WenQuanYi Micro Hei",
@@ -53,7 +61,14 @@ def main():
     if args.kind in ("bar", "line", "scatter") and not args.x:
         p.error("--kind %s 需要提供 --x 列名" % args.kind)
 
-    rows = read_rows(args.csv)
+    try:
+        src = resolve_input(args.csv)
+        out = resolve_output(args.out)
+    except PathError as e:
+        print("错误: 路径校验失败：%s" % e, file=sys.stderr)
+        sys.exit(2)
+
+    rows = read_rows(src)
     fig, ax = plt.subplots()
 
     if args.kind in ("box", "hist"):
@@ -81,8 +96,8 @@ def main():
         ax.set_ylabel(args.y)
 
     fig.tight_layout()
-    fig.savefig(args.out)
-    print(f"已生成: {args.out}")
+    fig.savefig(out)
+    print(f"已生成: {out}")
 
 
 if __name__ == "__main__":

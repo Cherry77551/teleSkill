@@ -6,9 +6,23 @@
 
 | 任务 | 做法 |
 |---|---|
-| 新建文档 | 用 `docx`（npm）写脚本生成 |
+| 新建整篇文档 | 优先 `scripts/build_docx.py`（JSON 规格确定性生成）；复杂版式再用 `docx`（npm）或 python-docx |
 | 修改现有文档 | `unzip` → 改 `word/document.xml` → `zip` 压回 |
 | 读取内容 | `pandoc -t markdown file.docx` |
+
+## 确定性生成（build_docx.py，首选）
+
+新建整篇 `.docx` 时，**优先用 [`../scripts/build_docx.py`](../scripts/build_docx.py)**，从 JSON 规格一次生成合规稿件，避免手写 OOXML 导致字体、目录、公式、编号出错：
+
+```bash
+python scripts/build_docx.py spec.json -o 论文.docx --check --strict
+```
+
+- 规格字段与示例见 [`../assets/templates/paper-spec.example.json`](../assets/templates/paper-spec.example.json)：`lang / title / author / date / toc / abstract / keywords / sections[] / references[]`。
+- 自动产出：Title 与 Heading1-3 内置样式（含 outline 级别）、A4 + 2.5cm 页边距、正文首行缩进 2 字符 / 1.5 倍行距、真实 **TOC 域**、一级中文编号（英文稿数字编号）、行间公式居中 + 编号靠右、全线 / 三线表、PNG/JPEG 插图、参考文献悬挂缩进。
+- 正文支持 `$...$` 行内公式与 `[n]` 上标引用（中文口径），表格单元格同样支持 `$...$`。
+- `--check` 生成后立即跑 `check_format.py`；`--strict` / `--lang` / `--template` 透传。**生成的目录是 TOC 域，首次打开 Word 时右键"更新域"填充页码。**
+- 复杂版式（封面、页眉页脚、多栏、批注、修订）仍按本节其余部分用 python-docx / `docx`（npm）扩展。
 
 ## 生成
 
@@ -103,4 +117,7 @@ pdftoppm -jpeg -r 100 out.pdf page
 
 ## 依赖
 
-`docx`（npm）、`pandoc`、LibreOffice（`soffice`）、`pdftoppm`（Poppler）。
+- `scripts/build_docx.py` / `check_*.py` / `omml.py`：**纯 Python 标准库**，无需安装依赖。
+- 复杂版式扩展：python-docx 或 `docx`（npm）。
+- 渲染校验：LibreOffice（`soffice`）或 Microsoft Word（`render_check.ps1 -UseWord`），以及 `pdftoppm`（Poppler）。
+- `pandoc`：可选，用于 Markdown / LaTeX 转换。

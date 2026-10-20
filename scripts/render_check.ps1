@@ -16,6 +16,7 @@
   Performance: 渲染是长流程的大头，默认只抽渲染公式页、目录页、首页/尾页，
   用 -FirstPage / -LastPage 指定范围；全页渲染（-All）仅最终交付前一次性可选。
   中间产物（PDF + 页面图）一律写到 <docx 目录>\.temp\，不进交付目录。
+  路径校验（D5.4）：输入 docx 须为常规文件且非符号链接；输出目录与 PDF 不得为符号链接。
 #>
 param(
     [Parameter(Mandatory = $true)][string]$Docx,
@@ -29,6 +30,16 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# D5.4 realpath 路径校验：输入必须存在、是常规文件、且不是符号链接 / 重解析点
+$srcItem = Get-Item -LiteralPath $Docx -Force -ErrorAction SilentlyContinue
+if (-not $srcItem) { Write-Error "输入文件不存在: $Docx"; exit 2 }
+if ($srcItem.PSIsContainer) { Write-Error "输入路径是目录: $Docx"; exit 2 }
+if ($srcItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+    Write-Error "拒绝符号链接 / 重解析点输入: $Docx"
+    exit 2
+}
+$full = (Resolve-Path -LiteralPath $Docx).Path   # canonical realpath
+
 if (-not (Get-Command pdftoppm -ErrorAction SilentlyContinue)) {
     Write-Error "pdftoppm (Poppler) not found. Install Poppler and ensure pdftoppm is in PATH."
     exit 1
@@ -38,12 +49,28 @@ if (-not $UseWord -and -not (Get-Command soffice -ErrorAction SilentlyContinue))
     exit 1
 }
 
-$full = (Resolve-Path $Docx).Path
 $base = [System.IO.Path]::GetFileNameWithoutExtension($full)
 $dir  = Split-Path -Parent $full
 if (-not $OutDir) { $OutDir = Join-Path $dir ".temp" }
-New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
+if (Test-Path -LiteralPath $OutDir) {
+    $outItem = Get-Item -LiteralPath $OutDir -Force
+    if (-not $outItem.PSIsContainer) { Write-Error "输出路径不是目录: $OutDir"; exit 2 }
+    if ($outItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+        Write-Error "拒绝写入符号链接目录: $OutDir"
+        exit 2
+    }
+} else {
+    New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
+}
+$OutDir = (Resolve-Path -LiteralPath $OutDir).Path   # canonical realpath
 $pdf  = Join-Path $OutDir "$base.pdf"
+if (Test-Path -LiteralPath $pdf) {
+    $pdfItem = Get-Item -LiteralPath $pdf -Force
+    if ($pdfItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+        Write-Error "拒绝覆盖符号链接: $pdf"
+        exit 2
+    }
+}
 
 if ($UseWord) {
     Write-Host "Converting to PDF via Word COM..."
