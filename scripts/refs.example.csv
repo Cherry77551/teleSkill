@@ -1,0 +1,5 @@
+type,authors,title,source,year,volume,issue,pages,address,doi,lang
+J,张三;李四;王五;赵六,一种面向工科的数据可视化方法,计算机学报,2023,46,3,45-58,,10.0000/xxxx.2023.03.005,zh
+M,王小明,科研绘图原理与实践,科学出版社,2021,,,,北京,,
+D,李华,面向高维数据的降维可视化研究,清华大学,2022,,,,北京,,
+C,Chen W;Li M;Zhao Q;Stone J A,A reproducible figure pipeline,Proc. of VIS,2025,,,120-128,Leipzig,,en
